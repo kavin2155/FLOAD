@@ -44,7 +44,6 @@ docker exec -i road-flood-postgres psql -U flood_user -d flood_ai < db/schema.sq
 
 ## 기상청 강수량 수집
 
-기상청 API 키는 GitHub에 올리지 않는다.
 `.env.example`을 복사해서 `.env` 파일을 만들고, 발급받은 키를 넣는다.
 
 ```bash
@@ -52,7 +51,7 @@ cp .env.example .env
 ```
 
 ```text
-KMA_API_KEY=발급받은_기상청_API_키
+KMA_API_KEY=S8_gdZL6Sq-P4HWS-tqvZQ
 DATABASE_URL=postgresql://flood_user:flood_pass@localhost:5432/flood_ai
 ```
 
