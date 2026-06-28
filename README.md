@@ -1,4 +1,4 @@
-# 침수 탐지 AI + 우회경로 추천 시스템 DB
+# FLOAD DB
 
 ## Docker 실행
 
