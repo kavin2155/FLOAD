@@ -51,7 +51,7 @@ cp .env.example .env
 ```
 
 ```text
-KMA_API_KEY=S8_gdZL6Sq-P4HWS-tqvZQ
+KMA_API_KEY=발급받은_기상청_api키
 DATABASE_URL=postgresql://flood_user:flood_pass@localhost:5432/flood_ai
 ```
 
