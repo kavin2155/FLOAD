@@ -1,5 +1,65 @@
 # FLOAD DB
 
+침수 탐지 AI 모델을 만들기 위한 데이터베이스 구축 프로젝트입니다.
+
+이 저장소의 목적은 단순히 DB를 만드는 것이 아니라, 팀원이 같은 데이터를 보고
+침수 탐지 모델 학습에 바로 사용할 수 있는 데이터셋을 만드는 것입니다.
+
+현재 DB에는 다음 데이터를 모읍니다.
+
+- 기상청 강수량 데이터
+- 과거 침수 이력 데이터
+- CCTV/침수위험 이미지 메타데이터
+- 침수/비침수 라벨
+
+## 전체 흐름
+
+```text
+기상청 API
+생활안전지도/재난안전 데이터
+AI Hub 부산 침수위험 이미지/라벨
+        |
+        v
+Python 수집/적재 스크립트
+        |
+        v
+PostgreSQL DB
+        |
+        v
+학습용 CSV export
+        |
+        v
+침수 탐지 AI 모델 학습
+```
+
+## DB 사용 원칙
+
+로컬 Docker DB와 Supabase DB를 역할별로 나누어 사용합니다.
+
+```text
+로컬 Docker DB
+- 개발/테스트용
+- 스크립트가 제대로 동작하는지 먼저 확인
+- 마음 편하게 지우고 다시 만들 수 있음
+
+Supabase DB
+- 팀 공유용 클라우드 DB
+- 실제 누적 데이터를 저장
+- 팀원이 같은 DB를 보고 작업 가능
+```
+
+`.env`의 `DATABASE_URL`이 어디를 가리키는지에 따라 스크립트가 데이터를 넣는 위치가 달라집니다.
+
+```text
+로컬 Docker DB:
+DATABASE_URL=postgresql://flood_user:flood_pass@localhost:5432/flood_ai
+
+Supabase DB:
+DATABASE_URL=postgresql://...
+```
+
+GitHub에는 `.env`를 올리지 않습니다.
+
 ## Docker 실행
 
 ```bash
@@ -41,6 +101,25 @@ docker exec -i road-flood-postgres psql -U flood_user -d flood_ai < db/schema.sq
 - `cctv_media`: CCTV 이미지/영상 파일 메타데이터
 - `flood_labels`: 정상/침수직전/침수 라벨
 - `collection_runs`: 수집 작업 실행 기록
+
+## 빠른 점검
+
+현재 연결된 DB가 살아 있는지 확인합니다.
+
+```bash
+.venv/bin/python scripts/check_database.py
+```
+
+테이블별 데이터 수를 SQL로 직접 확인할 수도 있습니다.
+
+```bash
+docker exec road-flood-postgres psql -U flood_user -d flood_ai -c "
+SELECT 'cctv_media' AS table_name, COUNT(*) FROM cctv_media
+UNION ALL SELECT 'flood_labels', COUNT(*) FROM flood_labels
+UNION ALL SELECT 'rainfall_observations', COUNT(*) FROM rainfall_observations
+UNION ALL SELECT 'flood_history', COUNT(*) FROM flood_history;
+"
+```
 
 ## 기상청 강수량 수집
 
@@ -188,3 +267,80 @@ SUPABASE_DATABASE_URL=postgresql://postgres.project-ref:비밀번호@host:6543/p
 ```bash
 .venv/bin/python scripts/migrate_to_cloud.py
 ```
+
+## 모델 학습용 데이터 export
+
+모델 학습자는 DB를 직접 깊게 알 필요 없이 CSV를 받아서 시작할 수 있어야 합니다.
+아래 명령은 `cctv_media`와 `flood_labels`를 조인해서 학습용 CSV를 만듭니다.
+
+```bash
+.venv/bin/python scripts/export_training_dataset.py
+```
+
+기본 출력 파일:
+
+```text
+outputs/training_dataset.csv
+```
+
+CSV 컬럼:
+
+```text
+media_id
+file_path
+label
+captured_at
+media_type
+source_dataset
+cctv_code
+cctv_name
+width
+height
+duration_sec
+label_source
+note
+```
+
+부산시 침수위험 복합 데이터만 뽑으려면:
+
+```bash
+.venv/bin/python scripts/export_training_dataset.py \
+  --source-dataset 부산시_침수위험_복합_데이터
+```
+
+지능형 관제 CCTV 영상 데이터만 뽑으려면:
+
+```bash
+.venv/bin/python scripts/export_training_dataset.py \
+  --source-dataset 지능형_관제_서비스_CCTV_영상_데이터
+```
+
+이 CSV가 모델 학습 코드의 첫 입력입니다.
+
+중요한 점:
+
+- 이미지/영상 파일 자체는 DB에 넣지 않습니다.
+- DB에는 파일 경로와 라벨, 메타데이터를 저장합니다.
+- 학습 코드는 CSV의 `file_path`를 보고 실제 이미지/영상 파일을 읽습니다.
+- Supabase에는 대용량 이미지 파일이 아니라 메타데이터와 라벨을 저장합니다.
+
+## 팀원이 처음 볼 때 이해해야 할 것
+
+이 DB는 침수 탐지 모델 학습을 위해 다음 질문에 답하도록 설계되어 있습니다.
+
+```text
+1. 어떤 이미지/영상인가?
+   cctv_media
+
+2. 침수인지 아닌지 라벨은 무엇인가?
+   flood_labels
+
+3. 해당 시점에 비가 얼마나 왔는가?
+   rainfall_observations
+
+4. 해당 지역의 과거 침수 이력은 있는가?
+   flood_history
+```
+
+처음 학습은 `cctv_media + flood_labels`만으로 시작할 수 있습니다.
+이후 성능을 높이기 위해 강수량, 침수 이력, 수위 데이터를 추가로 연결합니다.
