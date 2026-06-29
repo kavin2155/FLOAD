@@ -6,7 +6,6 @@ from pathlib import Path
 import psycopg
 
 DEFAULT_LOCAL_URL = "postgresql://flood_user:flood_pass@localhost:5432/flood_ai"
-REMOTE_URL = "postgresql://postgres.hasogtetrgtthutntsla:wjddbsghks1!@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres"
 
 
 def load_dotenv(path: Path) -> None:
@@ -77,7 +76,9 @@ def main() -> None:
     load_dotenv(Path(".env"))
     
     local_url = os.environ.get("DATABASE_URL", DEFAULT_LOCAL_URL)
-    remote_url = REMOTE_URL
+    remote_url = os.environ.get("SUPABASE_DATABASE_URL")
+    if not remote_url:
+        raise SystemExit("SUPABASE_DATABASE_URL is missing. Add your Supabase connection string to .env.")
 
     print("Connecting to local and remote databases...")
     
