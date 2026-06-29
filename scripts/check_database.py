@@ -11,9 +11,6 @@ TABLES = [
     "weather_stations",
     "rainfall_observations",
     "flood_history",
-    "cctv_sources",
-    "cctv_media",
-    "flood_labels",
     "collection_runs",
 ]
 
@@ -77,16 +74,6 @@ def main() -> None:
                 count = cur.fetchone()[0]
                 print(f"- {table}: {count}")
 
-            cur.execute(
-                """
-                SELECT COUNT(*)
-                FROM cctv_media
-                WHERE storage_path IS NOT NULL
-                """
-            )
-            uploaded_count = cur.fetchone()[0]
-            print()
-            print(f"Media uploaded to Storage: {uploaded_count}")
 
 
 if __name__ == "__main__":

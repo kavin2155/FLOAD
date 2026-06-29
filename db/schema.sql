@@ -49,50 +49,6 @@ CREATE TABLE IF NOT EXISTS flood_history (
     UNIQUE (source, source_event_id)
 );
 
-CREATE TABLE IF NOT EXISTS cctv_sources (
-    id BIGSERIAL PRIMARY KEY,
-    cctv_code VARCHAR(100) UNIQUE,
-    cctv_name VARCHAR(150),
-    region_id BIGINT REFERENCES regions(id),
-    latitude NUMERIC(10, 7),
-    longitude NUMERIC(10, 7),
-    road_name VARCHAR(150),
-    source VARCHAR(100) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS cctv_media (
-    id BIGSERIAL PRIMARY KEY,
-    cctv_source_id BIGINT REFERENCES cctv_sources(id),
-    captured_at TIMESTAMPTZ,
-    media_type VARCHAR(20) NOT NULL CHECK (media_type IN ('image', 'video')),
-    file_path TEXT NOT NULL,
-    file_hash VARCHAR(128),
-    width INTEGER,
-    height INTEGER,
-    duration_sec NUMERIC(10, 3),
-    source_dataset VARCHAR(100),
-    storage_bucket VARCHAR(100),
-    storage_path TEXT,
-    storage_url TEXT,
-    storage_uploaded_at TIMESTAMPTZ,
-    raw_metadata JSONB,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (file_path)
-);
-
-CREATE TABLE IF NOT EXISTS flood_labels (
-    id BIGSERIAL PRIMARY KEY,
-    cctv_media_id BIGINT NOT NULL REFERENCES cctv_media(id) ON DELETE CASCADE,
-    label VARCHAR(30) NOT NULL CHECK (label IN ('normal', 'pre_flood', 'flooded', 'unknown')),
-    confidence NUMERIC(5, 4),
-    labeled_by VARCHAR(100),
-    label_source VARCHAR(100) NOT NULL,
-    note TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (cctv_media_id, label_source)
-);
-
 CREATE TABLE IF NOT EXISTS collection_runs (
     id BIGSERIAL PRIMARY KEY,
     source VARCHAR(100) NOT NULL,
@@ -114,15 +70,3 @@ CREATE INDEX IF NOT EXISTS idx_rainfall_station_observed_at
 
 CREATE INDEX IF NOT EXISTS idx_flood_history_event_date
     ON flood_history (event_date);
-
-CREATE INDEX IF NOT EXISTS idx_cctv_media_captured_at
-    ON cctv_media (captured_at);
-
-CREATE INDEX IF NOT EXISTS idx_flood_labels_label
-    ON flood_labels (label);
-
-ALTER TABLE cctv_media
-    ADD COLUMN IF NOT EXISTS storage_bucket VARCHAR(100),
-    ADD COLUMN IF NOT EXISTS storage_path TEXT,
-    ADD COLUMN IF NOT EXISTS storage_url TEXT,
-    ADD COLUMN IF NOT EXISTS storage_uploaded_at TIMESTAMPTZ;
