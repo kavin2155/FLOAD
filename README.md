@@ -153,3 +153,23 @@ SAFETY_DATA_API_KEY=발급받은_서비스키
 ```bash
 .venv/bin/python scripts/collect_flood_history.py
 ```
+
+## 부산시 침수위험 복합 데이터 적재
+
+AI Hub의 **부산시 침수위험 복합 데이터(수치모델 침수 이미지)**의 라벨 데이터셋(Training/Validation)을 파싱하여 데이터베이스에 일괄 적재한다.
+
+### 1. 데이터셋 디렉토리 설정
+`.env` 파일에 데이터셋 루트 폴더의 절대 경로를 `DATASET_DIR` 또는 직접 명령 인자로 넘겨줄 수 있다. 기본 디렉토리는 `/Users/jeong-yunhwan/Downloads/135.부산시_침수위험_복합_데이터`로 설정되어 있다.
+
+### 2. 적재 실행
+실제 DB 반영 전에 파싱이 잘 돌아가는지 테스트하려면 `--dry-run` 옵션을 사용한다.
+
+```bash
+.venv/bin/python scripts/ingest_flood_risk_dataset.py --dry-run
+```
+
+실제 클라우드 DB(Supabase)에 일괄 인서트하려면 옵션 없이 실행한다.
+
+```bash
+.venv/bin/python scripts/ingest_flood_risk_dataset.py
+```
