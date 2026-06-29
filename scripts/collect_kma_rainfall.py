@@ -14,7 +14,6 @@ import psycopg
 
 
 KMA_BASE_URL = "https://apihub.kma.go.kr/api/typ01/url"
-DEFAULT_DATABASE_URL = "postgresql://flood_user:flood_pass@localhost:5432/flood_ai"
 MISSING_VALUES = {"", "-9", "-9.0", "-99", "-99.0", "-999", "-999.0"}
 KST = ZoneInfo("Asia/Seoul")
 
@@ -236,7 +235,9 @@ def main() -> None:
     if api_key == "your_kma_api_key_here":
         raise SystemExit("KMA_API_KEY still has the example value. Put your real KMA API key in .env.")
 
-    database_url = os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise SystemExit("DATABASE_URL is missing. Add your Supabase connection string to .env.")
 
     if args.mode == "period":
         if not args.start or not args.end:

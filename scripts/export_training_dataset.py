@@ -8,7 +8,6 @@ from urllib.parse import urlparse
 import psycopg
 
 
-DEFAULT_DATABASE_URL = "postgresql://flood_user:flood_pass@localhost:5432/flood_ai"
 DEFAULT_OUTPUT_PATH = "outputs/training_dataset.csv"
 
 
@@ -27,8 +26,6 @@ def describe_database(url: str) -> str:
     parsed = urlparse(url)
     host = parsed.hostname or "unknown"
     database = parsed.path.lstrip("/") or "unknown"
-    if host in {"localhost", "127.0.0.1"}:
-        return f"local Docker DB ({host}/{database})"
     if "supabase" in host:
         return f"Supabase DB ({host}/{database})"
     return f"PostgreSQL ({host}/{database})"
@@ -93,7 +90,9 @@ def main() -> None:
     parser.add_argument("--limit", type=int, help="Maximum number of rows to export.")
     args = parser.parse_args()
 
-    database_url = os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise SystemExit("DATABASE_URL is missing. Add your Supabase connection string to .env.")
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 

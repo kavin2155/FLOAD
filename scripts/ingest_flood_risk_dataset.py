@@ -10,7 +10,6 @@ from zoneinfo import ZoneInfo
 import psycopg
 
 KST = ZoneInfo("Asia/Seoul")
-DEFAULT_DATABASE_URL = "postgresql://flood_user:flood_pass@localhost:5432/flood_ai"
 DEFAULT_DATASET_DIR = "/Users/jeong-yunhwan/Downloads/135.부산시_침수위험_복합_데이터"
 
 
@@ -57,7 +56,9 @@ def main() -> None:
     if not dataset_dir.exists():
         raise SystemExit(f"Dataset directory not found: {dataset_dir}\nPlease specify with --dataset-dir or check DATASET_DIR in .env.")
 
-    database_url = os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise SystemExit("DATABASE_URL is missing. Add your Supabase connection string to .env.")
 
     # 3.개방데이터/1.데이터
     data_dir = dataset_dir / "3.개방데이터" / "1.데이터"

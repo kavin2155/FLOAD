@@ -13,7 +13,6 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 KST = ZoneInfo("Asia/Seoul")
-DEFAULT_DATABASE_URL = "postgresql://flood_user:flood_pass@localhost:5432/flood_ai"
 API_URL = "https://www.safetydata.go.kr/V2/api/DSSP-IF-00117"
 
 
@@ -57,7 +56,9 @@ def main() -> None:
     if not api_key:
         raise SystemExit("SAFETY_DATA_API_KEY is missing. Add it to your .env file.")
 
-    database_url = os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise SystemExit("DATABASE_URL is missing. Add your Supabase connection string to .env.")
 
     page_no = 1
     num_of_rows = 100

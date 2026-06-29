@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 import psycopg
 
 
-DEFAULT_DATABASE_URL = "postgresql://flood_user:flood_pass@localhost:5432/flood_ai"
 TABLES = [
     "regions",
     "weather_stations",
@@ -35,9 +34,7 @@ def describe_database(url: str) -> str:
     host = parsed.hostname or "unknown"
     port = parsed.port or ""
     database = parsed.path.lstrip("/") or "unknown"
-    if host in {"localhost", "127.0.0.1"}:
-        kind = "local Docker PostgreSQL"
-    elif "supabase" in host:
+    if "supabase" in host:
         kind = "Supabase PostgreSQL"
     else:
         kind = "PostgreSQL"
@@ -46,7 +43,9 @@ def describe_database(url: str) -> str:
 
 def main() -> None:
     load_dotenv(Path(".env"))
-    database_url = os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise SystemExit("DATABASE_URL is missing. Add your Supabase connection string to .env.")
 
     print(f"Database target: {describe_database(database_url)}")
 
