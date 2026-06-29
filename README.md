@@ -119,3 +119,37 @@ DATASET_DIR=/Users/사용자명/Downloads/07.지능형_관제_서비스_CCTV_영
 ```bash
 .venv/bin/python scripts/ingest_cctv_dataset.py
 ```
+
+## 침수흔적도 데이터 수집
+
+생활안전지도 API(DSSP-IF-00117)를 연동하여 침수 이력(`flood_history`) 테이블에 데이터를 수집 및 적재한다.
+
+### 1. 환경 설정 (.env)
+
+`.env` 파일에 생활안전지도 API 키 `SAFETY_DATA_API_KEY` 변수를 등록한다.
+
+```text
+SAFETY_DATA_API_KEY=발급받은_서비스키
+```
+
+### 2. 수집기 실행
+
+기본값으로 **부산광역시** 지역 데이터만 필터링하여 수집하도록 설정되어 있다.
+
+동작 검증을 위해 DB에 반영하지 않고 파싱 결과만 확인하려면 `--dry-run` 옵션을 붙여 실행한다.
+
+```bash
+.venv/bin/python scripts/collect_flood_history.py --dry-run
+```
+
+전체 지역 데이터를 조회하며 파싱 결과를 보려면 `--all-regions` 옵션을 함께 사용한다.
+
+```bash
+.venv/bin/python scripts/collect_flood_history.py --dry-run --all-regions --limit-pages 1
+```
+
+실제 데이터베이스에 반영하여 수집을 진행하려면 옵션 없이 실행한다.
+
+```bash
+.venv/bin/python scripts/collect_flood_history.py
+```
