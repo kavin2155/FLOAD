@@ -72,6 +72,10 @@ CREATE TABLE IF NOT EXISTS cctv_media (
     height INTEGER,
     duration_sec NUMERIC(10, 3),
     source_dataset VARCHAR(100),
+    storage_bucket VARCHAR(100),
+    storage_path TEXT,
+    storage_url TEXT,
+    storage_uploaded_at TIMESTAMPTZ,
     raw_metadata JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (file_path)
@@ -116,3 +120,9 @@ CREATE INDEX IF NOT EXISTS idx_cctv_media_captured_at
 
 CREATE INDEX IF NOT EXISTS idx_flood_labels_label
     ON flood_labels (label);
+
+ALTER TABLE cctv_media
+    ADD COLUMN IF NOT EXISTS storage_bucket VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS storage_path TEXT,
+    ADD COLUMN IF NOT EXISTS storage_url TEXT,
+    ADD COLUMN IF NOT EXISTS storage_uploaded_at TIMESTAMPTZ;

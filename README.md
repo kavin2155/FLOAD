@@ -20,7 +20,7 @@ Supabase
 ```
 
 이미지/영상 파일 자체를 DB에 넣지는 않습니다.
-DB에는 파일 경로, 라벨, 촬영 시각, 원본 메타데이터를 저장합니다.
+DB에는 파일 경로, Storage 경로, 라벨, 촬영 시각, 원본 메타데이터를 저장합니다.
 
 ## 환경 설정
 
@@ -37,6 +37,9 @@ DATABASE_URL=postgresql://postgres.project-ref:비밀번호@host:6543/postgres
 KMA_API_KEY=기상청_API_KEY
 SAFETY_DATA_API_KEY=생활안전지도_API_KEY
 DATASET_DIR=/AI_Hub_데이터셋_경로
+SUPABASE_URL=https://project-ref.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=Supabase_service_role_key
+SUPABASE_STORAGE_BUCKET=flood-media
 ```
 
 `.env`는 GitHub에 올리지 않습니다.
@@ -138,6 +141,38 @@ AI Hub `135.부산시_침수위험_복합_데이터`의 라벨 JSON을 읽어
 .venv/bin/python scripts/ingest_flood_risk_dataset.py
 ```
 
+## 이미지/영상 파일 Storage 업로드
+
+DB의 `cctv_media.file_path`는 원본 파일을 찾기 위한 경로입니다.
+팀원이 같은 파일을 바로 쓰려면 실제 이미지/영상 파일을 Supabase Storage에 올리고,
+DB에는 `storage_bucket`, `storage_path`, `storage_url`을 기록합니다.
+
+먼저 Storage 컬럼이 DB에 있는지 스키마를 적용합니다.
+
+```bash
+.venv/bin/python scripts/apply_schema.py
+```
+
+업로드 전에 파일을 제대로 찾는지 확인합니다.
+
+```bash
+.venv/bin/python scripts/upload_media_to_storage.py --limit 5 --dry-run
+```
+
+문제가 없으면 실제로 업로드합니다.
+
+```bash
+.venv/bin/python scripts/upload_media_to_storage.py --limit 5
+```
+
+전체 업로드는 파일 용량이 크므로 작은 개수로 테스트한 뒤 진행합니다.
+
+```bash
+.venv/bin/python scripts/upload_media_to_storage.py
+```
+
+업로드 후 `scripts/check_database.py`를 실행하면 Storage에 올라간 파일 수를 확인할 수 있습니다.
+
 ## 학습용 CSV 내보내기
 
 모델 학습자는 DB를 직접 다루지 않고 CSV부터 사용할 수 있습니다.
@@ -167,6 +202,9 @@ cctv_name
 width
 height
 duration_sec
+storage_bucket
+storage_path
+storage_url
 label_source
 note
 ```
@@ -190,5 +228,5 @@ note
 2. scripts/check_database.py로 DB 상태 확인
 3. 필요한 수집/적재 스크립트 실행
 4. scripts/export_training_dataset.py로 학습용 CSV 생성
-5. CSV의 file_path와 label을 사용해 모델 학습
+5. CSV의 storage_path 또는 file_path와 label을 사용해 모델 학습
 ```

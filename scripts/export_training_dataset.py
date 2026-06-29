@@ -65,6 +65,9 @@ def build_query(source_dataset: str | None, label: str | None, limit: int | None
             cm.width,
             cm.height,
             cm.duration_sec,
+            cm.storage_bucket,
+            cm.storage_path,
+            cm.storage_url,
             fl.label_source,
             fl.note
         FROM cctv_media cm
