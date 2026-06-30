@@ -1,12 +1,6 @@
 # FLOAD 데이터 사용 안내
 
-FLOAD는 CCTV 기반 침수 탐지 AI 모델을 만들기 위한 프로젝트입니다.
-
-이 저장소는 팀원이 같은 데이터를 기준으로 학습 데이터를 확인하고, 필요한 파일 위치를 빠르게 찾을 수 있도록 정리한 안내서와 수집 코드를 담고 있습니다.
-
 ## 먼저 볼 것
-
-팀원이 데이터를 확인할 때는 아래 스프레드시트를 먼저 보면 됩니다.
 
 [FLOAD_데이터_현황](https://docs.google.com/spreadsheets/d/1gx7EI8ngK-dSwvHW3d5Qm97ClD4If218TXkIbfXORlo/edit?usp=drivesdk)
 
