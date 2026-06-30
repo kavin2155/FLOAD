@@ -17,8 +17,6 @@ README_사용법
 
 ## 데이터 파일 위치
 
-CCTV 영상, 이미지, 라벨 파일처럼 용량이 큰 원본 데이터는 아래 Google Drive 폴더에 있습니다.
-
 [FLOAD_DATA](https://drive.google.com/drive/folders/1DxYZwzf4QliiFzZdf32HQ6U0sHpMQBnC)
 
 현재 Drive 구조는 아래처럼 나눠져 있습니다.
