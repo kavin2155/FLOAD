@@ -16,7 +16,7 @@ FLOAD_DATA/
   processed/
     Optional processed frames or resized images
   exports/
-    Training CSV files
+    Team-facing Google Sheets and training CSV files
   docs/
     Data notes and sharing instructions
 ```
@@ -25,6 +25,7 @@ Rules:
 
 - Put large AI Hub files in Google Drive, not GitHub.
 - Put API data such as rainfall and flood history in Supabase.
+- Use `exports/FLOAD_데이터_현황` as the first human-readable data status sheet.
 - Keep paths in CSV relative to `FLOAD_DATA`.
 - Each teammate sets `DATASET_DIR` to their local Google Drive folder path.
 

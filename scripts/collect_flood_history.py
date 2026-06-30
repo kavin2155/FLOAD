@@ -14,6 +14,24 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 KST = ZoneInfo("Asia/Seoul")
 API_URL = "https://www.safetydata.go.kr/V2/api/DSSP-IF-00117"
+BUSAN_SIGUNGU_BY_CODE = {
+    "26110": "중구",
+    "26140": "서구",
+    "26170": "동구",
+    "26200": "영도구",
+    "26230": "부산진구",
+    "26260": "동래구",
+    "26290": "남구",
+    "26320": "북구",
+    "26350": "해운대구",
+    "26380": "사하구",
+    "26410": "금정구",
+    "26440": "강서구",
+    "26470": "연제구",
+    "26500": "수영구",
+    "26530": "사상구",
+    "26710": "기장군",
+}
 
 
 def load_dotenv(path: Path) -> None:
@@ -69,7 +87,7 @@ def main() -> None:
 
     conn = None
     if not args.dry_run:
-        conn = psycopg.connect(database_url)
+        conn = psycopg.connect(database_url, prepare_threshold=None)
         cur = conn.cursor()
 
     try:
@@ -128,8 +146,10 @@ def main() -> None:
                 end_tm = item.get("FLDN_END_TM")
 
                 prv_nm = item.get("PRV_NM") or item.get("STDG_CTPV_NM") or "부산광역시"
-                sgg_nm = item.get("SGG_NM") or item.get("STDG_SGG_NM")
                 sgg_cd = item.get("STDG_SGG_CD")
+                sgg_nm = item.get("SGG_NM") or item.get("STDG_SGG_NM")
+                if ctpv_cd == "26" and sgg_cd:
+                    sgg_nm = BUSAN_SIGUNGU_BY_CODE.get(sgg_cd, sgg_nm)
 
                 # 시간 파싱
                 started_at = parse_timestamp(str(bgng_ymd), str(bgng_tm))

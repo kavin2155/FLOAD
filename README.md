@@ -9,6 +9,7 @@ Google Drive
 - AI Hub 이미지/영상 원본 파일
 - AI Hub 라벨 JSON
 - 학습용 CSV
+- 팀원 확인용 Google Sheets
 
 Supabase
 - 기상청 강수량 API 데이터
@@ -34,8 +35,8 @@ https://drive.google.com/drive/folders/1DxYZwzf4QliiFzZdf32HQ6U0sHpMQBnC
 ```text
 FLOAD_DATA/
   raw/
-    07_cctv/
-    135_busan_flood/
+    07_cctv/original/
+    135_busan_flood/original/
   processed/
   exports/
   docs/
@@ -43,6 +44,35 @@ FLOAD_DATA/
 
 AI Hub에서 받은 대용량 파일은 GitHub나 Supabase DB에 올리지 않습니다.
 Google Drive의 `raw/` 아래에 보관합니다.
+
+팀원이 데이터를 확인할 때는 아래 Google Sheets를 먼저 봅니다.
+
+```text
+FLOAD_데이터_현황
+https://docs.google.com/spreadsheets/d/1gx7EI8ngK-dSwvHW3d5Qm97ClD4If218TXkIbfXORlo/edit
+```
+
+이 시트는 `FLOAD_DATA/exports/`에도 들어 있습니다.
+
+시트 구성:
+
+```text
+README_사용법
+수집현황
+실시간_강수량
+과거강수량_시간별
+과거강수량_일별요약
+침수이력_API전체
+```
+
+시트별 원천:
+
+```text
+실시간_강수량 = 기상청 API Hub kma_sfctm2.php
+과거강수량_시간별 = 기상청 API Hub kma_sfctm3.php
+과거강수량_일별요약 = 과거강수량_시간별을 날짜별로 집계
+침수이력_API전체 = 재난안전데이터공유플랫폼/생활안전지도 침수흔적도 API
+```
 
 ## Supabase에 저장하는 데이터
 
@@ -118,6 +148,15 @@ Supabase에 저장:
 
 `--start`, `--end`는 한국시간 기준 `YYYYMMDDHHMM` 형식입니다.
 
+부산 3년치 과거 강수량을 월 단위로 나누어 저장:
+
+```bash
+.venv/bin/python scripts/collect_busan_rainfall_3y.py
+```
+
+현재 기준 범위는 `2023-06-30`부터 `2026-06-30`까지입니다.
+네트워크 오류가 날 수 있어서 월별 요청은 자동으로 재시도합니다.
+
 ## 실시간 강수량 자동 수집
 
 macOS에서 매시간 5분에 부산 실시간 강수량을 Supabase에 저장하도록 설정할 수 있습니다.
@@ -149,6 +188,16 @@ logs/realtime_rainfall.err.log
 ```bash
 .venv/bin/python scripts/collect_flood_history.py
 ```
+
+침수흔적도 API는 부산 구/군 이름 대신 행정구역 코드만 주는 경우가 있습니다.
+코드는 스크립트 안에서 부산 16개 구/군명으로 매핑합니다.
+
+```text
+예: 26350 -> 해운대구, 26440 -> 강서구, 26470 -> 연제구
+```
+
+Google Sheets에는 중복을 피하기 위해 침수이력 전체 탭만 둡니다.
+필요한 기간 필터는 Sheets에서 날짜 필터로 확인합니다.
 
 ## AI Hub 데이터 사용
 

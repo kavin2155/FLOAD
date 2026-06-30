@@ -165,21 +165,37 @@ def parse_rainfall_mm(row: dict[str, str]) -> Decimal | None:
 
 
 def upsert_rainfall_rows(database_url: str, rows: list[dict[str, str]], source_api: str) -> int:
-    inserted_or_updated = 0
+    parsed_rows = []
 
-    with psycopg.connect(database_url) as conn:
+    for row in rows:
+        station_code = first_value(row, ("STN", "STN_ID"))
+        time_value = first_value(row, ("TM", "YYMMDDHHMI", "YYYYMMDDHHMI"))
+        rainfall = parse_rainfall_mm(row)
+
+        if station_code is None or time_value is None or rainfall is None:
+            continue
+
+        parsed_rows.append(
+            {
+                "station_code": station_code,
+                "station_name": f"KMA-{station_code}",
+                "observed_at": parse_observed_at(time_value),
+                "rainfall": rainfall,
+                "raw_payload": json.dumps(row, ensure_ascii=False),
+            }
+        )
+
+    if not parsed_rows:
+        return 0
+
+    with psycopg.connect(database_url, prepare_threshold=None) as conn:
         with conn.cursor() as cur:
-            for row in rows:
-                station_code = first_value(row, ("STN", "STN_ID"))
-                time_value = first_value(row, ("TM", "YYMMDDHHMI", "YYYYMMDDHHMI"))
-                rainfall = parse_rainfall_mm(row)
-
-                if station_code is None or time_value is None or rainfall is None:
-                    continue
-
-                observed_at = parse_observed_at(time_value)
-                station_name = f"KMA-{station_code}"
-
+            station_ids = {}
+            station_names = {
+                parsed["station_code"]: parsed["station_name"]
+                for parsed in parsed_rows
+            }
+            for station_code, station_name in station_names.items():
                 cur.execute(
                     """
                     INSERT INTO weather_stations (station_code, station_name, source)
@@ -190,31 +206,41 @@ def upsert_rainfall_rows(database_url: str, rows: list[dict[str, str]], source_a
                     """,
                     (station_code, station_name),
                 )
-                station_id = cur.fetchone()[0]
+                station_ids[station_code] = cur.fetchone()[0]
 
-                cur.execute(
-                    """
-                    INSERT INTO rainfall_observations (
-                        station_id,
-                        observed_at,
-                        rainfall_mm,
-                        source_api,
-                        raw_payload
-                    )
-                    VALUES (%s, %s, %s, %s, %s)
-                    ON CONFLICT (station_id, observed_at, source_api)
-                    DO UPDATE SET
-                        rainfall_mm = EXCLUDED.rainfall_mm,
-                        raw_payload = EXCLUDED.raw_payload,
-                        collected_at = NOW()
-                    """,
-                    (station_id, observed_at, rainfall, source_api, json.dumps(row, ensure_ascii=False)),
+            rainfall_values = [
+                (
+                    station_ids[parsed["station_code"]],
+                    parsed["observed_at"],
+                    parsed["rainfall"],
+                    source_api,
+                    parsed["raw_payload"],
                 )
-                inserted_or_updated += 1
+                for parsed in parsed_rows
+            ]
+
+            cur.executemany(
+                """
+                INSERT INTO rainfall_observations (
+                    station_id,
+                    observed_at,
+                    rainfall_mm,
+                    source_api,
+                    raw_payload
+                )
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (station_id, observed_at, source_api)
+                DO UPDATE SET
+                    rainfall_mm = EXCLUDED.rainfall_mm,
+                    raw_payload = EXCLUDED.raw_payload,
+                    collected_at = NOW()
+                    """,
+                rainfall_values,
+            )
 
         conn.commit()
 
-    return inserted_or_updated
+    return len(rainfall_values)
 
 
 def main() -> None:
