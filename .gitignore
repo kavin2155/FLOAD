@@ -7,3 +7,5 @@ work/
 outputs/
 logs/
 *.csv
+credentials/
+*service-account*.json

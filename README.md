@@ -57,6 +57,7 @@ FLOAD_DATA/
 
 데이터 설명서, 수집 기준, 참고 문서를 두는 위치입니다.
 원천데이터와 라벨링데이터의 차이는 [데이터 파일 구조 설명](docs/data_file_guide.md)을 보면 됩니다.
+실시간 강수량 자동갱신 설정은 [Google Sheets 자동갱신 설정](docs/google_sheet_auto_sync.md)을 보면 됩니다.
 
 ## 스프레드시트에 있는 데이터
 

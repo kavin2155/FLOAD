@@ -11,7 +11,7 @@ LABEL = "com.fload.realtime-rainfall"
 def main() -> None:
     repo_dir = Path(__file__).resolve().parents[1]
     python_path = repo_dir / ".venv" / "bin" / "python"
-    script_path = repo_dir / "scripts" / "collect_kma_rainfall.py"
+    script_path = repo_dir / "scripts" / "run_realtime_rainfall_pipeline.py"
     log_dir = repo_dir / "logs"
     log_dir.mkdir(exist_ok=True)
 
@@ -23,10 +23,6 @@ def main() -> None:
         "ProgramArguments": [
             str(python_path),
             str(script_path),
-            "--mode",
-            "realtime",
-            "--station",
-            "159",
         ],
         "WorkingDirectory": str(repo_dir),
         "StartCalendarInterval": {"Minute": 5},
@@ -50,6 +46,7 @@ def main() -> None:
 
     print(f"Installed LaunchAgent: {plist_path}")
     print("Runs every hour at minute 5.")
+    print("Pipeline: collect realtime KMA rainfall, then sync the latest rows to Google Sheets when credentials are configured.")
     print(f"Logs: {log_dir}")
 
 
